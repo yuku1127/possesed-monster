@@ -1,1 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
 
+div.massage_box{
+    width:70%;
+    white-space: [pre-wrap];
+    font-family: 'DotGothic16';
+    font-size: 30px;
+    position: absolute;
+    top: 40px; left: 70px;
+}
+span{color: white; opacity: 0;}
+.revealed{opacity: 1;}
