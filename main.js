@@ -74,7 +74,7 @@ let anime=[];
 let action=[];
 
 //プレイヤーを作る
-let player=new Player(75<<4,17<<4);
+let player=new Player(5<<4,17<<4);
 //フィールドを作る
 let field=new Field();
 //映像クラスを作る
