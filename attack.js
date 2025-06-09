@@ -254,3 +254,4 @@ class MonsterAttack
         let py=(this.y>>4)-field.scy;
         drawsprite(this.snum,px,py);
     }
+}
