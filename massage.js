@@ -5,20 +5,14 @@ class Massage{
       this.tcou=tcou;                  //テキスト回数
       this.tsec=textmassage[num].tsec; //テキスト表示秒数
       this.flag=0;     //会話秒数
-      this.fflag=false;//ファーストフラグ
+      this.fflag=false;//一度メッセージを表示するとtrueになる
       this.kill=false;
       this.cou=0;
       this.delay=2000;
       film.talk=true;
     }
     update(){
-      if(this.kill){
-        /*setTimeout(() => {
-        film.talk=false;
-        //cancelflag=false;
-      }, this.delay);*/
-        return;
-      }
+      if(this.kill)return;
       this.cou++;
       this.chara=textmassage[this.num].chara;
       this.tsec=textmassage[this.num].tsec;
