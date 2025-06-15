@@ -2,22 +2,6 @@
 //データ一覧
 //
 
-class IventMaster
-{
-    constructor(type,r,snum)
-    {
-        this.type=type;
-        this.r=r;
-        this.snum=snum;
-    }
-}
-
-let iventMaster=
-[
-    new IventMaster(0,48,22),  //0.ワプナ
-]
-
-
 class MonsterMaster
 {
 	constructor(tnum,r,hp,atk,backbl)
@@ -38,7 +22,7 @@ let monsterMaster=
     new MonsterMaster(3,10,100,5,26),        // 3.タツノウチオトシゴ
     new MonsterMaster(4,10,50,10,-1),        // 4.トゲネズミ
     new MonsterMaster(5,7,30,1,-1),        // 5.カヤクコロガシ
-    new MonsterMaster(6,16,200,20,-1),        // 6.ゴーレム
+    new MonsterMaster(6,16,150,20,-1),        // 6.ゴーレム
 ]
 
 //モンスター変換関数
@@ -267,7 +251,7 @@ class TextMassage{
 }
 
 let textmassage=[
-    new TextMassage(0,0,90),  //0.ワプナ1-1
+    new TextMassage(0,0,90),  //0.ワプナ(おじさん)1-1
     new TextMassage(1,0,90),  //1.ワプナ1-2
     new TextMassage(2,0,60),  //2.ワプナ1-3
     new TextMassage(3,0,120),  //3.ワプナ1-4
@@ -422,3 +406,18 @@ let floardata=[
     new FloarData(60,40,30,20,0),
     new FloarData(90,40,30,20,0),
 ]
+
+
+/*class IventMaster
+{
+    constructor(type,r,snum)
+    {
+        this.type=type;
+        this.r=r;
+        this.snum=snum;
+    }
+}
+let iventMaster=
+[
+    new IventMaster(0,48,22),  //0.ワプナ(おじさん)
+]*/
