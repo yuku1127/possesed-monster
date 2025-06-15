@@ -6,7 +6,6 @@ class Film{
     constructor(){
         this.blackout=0;
         this.cou=0;
-        //this.talk=false;
         this.end=false;
     }
 
@@ -23,20 +22,21 @@ class Film{
             if(this.cou<2){
                 cancelflag=true;
                 audio.bgmStop(audio.bnum);
-                //storage.delete();
             }
             else if(this.cou==120){
                 audio.bnum=6;
                 audio.bgmStart(audio.bnum);
             }
         }
-        //if(keyb.SBUTTON&&!gameStart)storage.delete(); //shiftでデータ消去
     }
 
-    gamestart(){
+    gamestart(){//spaceでゲーム開始
+        //dataに入れたリストを初期化してゲーム内のリストと区別
+        storage.data.action_talkphase=[0];
+        storage.data.monster_bosslocationlist=[];
 
-        //spaceでゲーム開始
-        storage.load();
+        //データのロード
+        storage.load();//保存データがあればstorage.dataに格納
         player.x=storage.data.player_x;
         player.y=storage.data.player_y;
         player.hp=storage.data.player_hp;
@@ -79,6 +79,18 @@ class Film{
         }
         actionlocationlist=a_list;  //再代入
         
+        //ボスの再生
+        list=bosslocationlist;//セーブしてないマスの位置も元のblに戻す
+        for(let i=0;i<list.length;i++){
+            fieldData[list[i][1]*FIELD_SIZE_W+list[i][0]]=list[i][2];
+        }
+
+        //討伐済みボス位置のロード
+        let b_list=storage.data.monster_bosslocationlist;
+        for(let i=0;i<b_list.length;i++){
+            fieldData[b_list[i][1]*FIELD_SIZE_W+b_list[i][0]]=-1;
+        }
+        bosslocationlist=b_list;  //再代入
 
         //フロア位置の更新
         field.floar=field.isFloar(player.x,player.y);
@@ -95,18 +107,25 @@ class Film{
     
     gamehome(){
         con.fillStyle="black";
-        con.fillRect(0,0,SCREEN_SIZE_W*3,SCREEN_SIZE_H*3);
+        con.fillRect(0,0,can.width,can.height);
     
         con.fillStyle="blue";
         con.font="30px 'DotGothic16'";
         let s='POSSESED MONSTER'
         let w=con.measureText(s).width;
-        con.fillText(s,(SCREEN_SIZE_W*3)/2-w/2,(SCREEN_SIZE_H*3)/2-20);
+        con.fillText(s,can.width/2-w/2,can.height/2-20);
     
         s="Push 'space' key to start !";
         w=con.measureText(s).width;
-        let x=(SCREEN_SIZE_W*3)/2 - w/2;
-        let y=(SCREEN_SIZE_H*3)/2 - 20+40;
+        let x=can.width/2 - w/2;
+        let y=can.height/2 - 20+40;
+        con.fillText(s,x,y);
+
+        s="Shiftキーでデータ消去";
+        w=con.measureText(s).width;
+        con.fillStyle="white";
+        x=can.width/2-w/2;
+        y=can.height-10;
         con.fillText(s,x,y);
 
         for(let i=0;i<monster.length;i++)
@@ -136,6 +155,14 @@ class Film{
 
         }
 
+        if((60*6)>frameCount&&frameCount>(60*3)){//
+            vcon.fillStyle ="white";
+                let s="ポーチを開く：W";
+                let w=vcon.measureText(s).width;
+                let x=SCREEN_SIZE_W/2 - w/2;
+                let y=SCREEN_SIZE_H/2 - 20;
+                vcon.fillText(s,x,y);
+        }
         //hp０でgameover表示
         if(gameOver)
             {
@@ -204,6 +231,11 @@ class Film{
                 let w=vcon.measureText(s).width;
                 let x=SCREEN_SIZE_W/2 - w/2;
                 let y=SCREEN_SIZE_H/2 ;
+                vcon.fillText(s,x,y);
+                s="Push 'R' key to restart";
+                w=vcon.measureText(s).width;
+                x=SCREEN_SIZE_W/2 - w/2;
+                y=SCREEN_SIZE_H/2+90 ;
                 vcon.fillText(s,x,y);
             }
         }
