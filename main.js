@@ -9,15 +9,20 @@ let can =document.getElementById("can");
 let con =can.getContext("2d");
 
 const GAME_FPS=1000/60;
-const SCREEN_SIZE_W=256;  //画面サイズ縦
-const SCREEN_SIZE_H=224;  //画面サイズ横
+const SCREEN_SIZE_W=256;  //仮想画面サイズ縦
+const SCREEN_SIZE_H=224;  //仮想画面サイズ横
 
 vcan.width = SCREEN_SIZE_W;
 vcan.height = SCREEN_SIZE_H;
 vcon.font="10px 'DotGothic16'";
+const text_message_p = document.getElementsByClassName("text_massage_p")[0];
 
-can.width = SCREEN_SIZE_W*3;
-can.height = SCREEN_SIZE_H*3;
+
+can.width = window.innerWidth-10;
+can.height = window.innerHeight-10;
+let fontSize=30*(can.width/750)
+text_message_p.style.fontSize=`${fontSize}px`;
+
 
 con.mozimageSmoothingEnabled = SMOOTHING;
 con.webkitimageSmoothingEnabled=SMOOTHING;
@@ -25,15 +30,15 @@ con.msimageSmoothingEnabled =SMOOTHING;
 con.imageSmoothingEnabled =SMOOTHING;
 con.font="30px 'DotGothic16'";
 
-//一つのブロックが縦、横に何個並ぶのか
+//画面サイズをブロック換算
 const MAP_SIZE_W = SCREEN_SIZE_W/16;
 const MAP_SIZE_H = SCREEN_SIZE_H/16;
 
 //マップデータのブロック数
 const FIELD_SIZE_W=128;
-const FIELD_SIZE_H=60;//80
+const FIELD_SIZE_H=60;
 
-//
+//ゲームオーバー、スタート、リセットフラグの定義
 let gameOver=false;
 let gameStart=false;
 let gameReset=false;
@@ -45,7 +50,7 @@ let animationId;
 let frameCount =0;
 let startTime;
 
-let cancelflag=false;
+let cancelflag=false;//trueでプレイヤーやモンスターの処理を停止ささる
 
 const TO_RADIANS=Math.PI/180;
 
@@ -92,6 +97,7 @@ let itemlocationlist=[]; //取得済みアイテム位置情報
 //let collectionlist=[]  //コレクションアイテムの情報
 let talkphaselist=[0];   //会話フェーズの情報(今後キャラを増やすとき用に配列)
 let actionlocationlist=[]; //アクションマス(フラグが立った)の位置情報
+let bosslocationlist=[];//ボスの位置を記録
 let user_data={  //初期値の設定
     player_x:player.x,
     player_y:player.y,
@@ -103,6 +109,7 @@ let user_data={  //初期値の設定
     item_collectionlist:inventory.collectlist,
     action_talkphase:talkphaselist,
     action_locationlist:actionlocationlist,
+    monster_bosslocationlist:bosslocationlist,
 };
 let storage=new LocalStorage(user_data);
 storage.data=user_data;
@@ -110,10 +117,8 @@ storage.data=user_data;
 
 function updateObj(obj)
 {
-
     for(let i=obj.length-1;i>=0;i--)
     {
-
         obj[i].update();
         if(obj[i].kill)obj.splice(i,1);
     }
@@ -158,8 +163,7 @@ function drawsprite(snum,x,y)
 
 function drawObj(obj)
 {
-        for(let i=0;i<obj.length;i++)
-            obj[i].draw();
+    for(let i=0;i<obj.length;i++)obj[i].draw();
 }
 
 //描画処理
@@ -173,8 +177,8 @@ function draw()
     con.beginPath();
 
     //画面をkuro色でクリア
-    vcon.fillStyle="black";
-    vcon.fillRect(0,0,SCREEN_SIZE_W,SCREEN_SIZE_H);
+    //vcon.fillStyle="black";
+    //vcon.fillRect(0,0,SCREEN_SIZE_W,SCREEN_SIZE_H);
 
     //マップを表示
     background.draw();
@@ -200,12 +204,12 @@ function draw()
     //vcon.fillText("y:"+(player.y>>8),10,50);
     /*vcon.fillText("cancelflag:"+cancelflag,10,60);
     vcon.fillText("actionlocationlist:"+actionlocationlist,10,70);
-    vcon.fillText("locationlist:"+itemlocationlist,10,80);
-    vcon.fillText("back:"+floardata[field.floar].back,10,90);
+    vcon.fillText("st.item:"+storage.data.item_locationlist,10,80);
+    vcon.fillText("st.boss:"+storage.data.monster_bosslocationlist,10,90);
     if(item.length)vcon.fillText("item.length:"+item.length,10,100);
-    if(action.length)vcon.fillText("action.length:"+action.length,10,110);
-    if(monster.length)vcon.fillText("monster.remove:"+monster[0].remove,10,120);
-    vcon.fillText("player.type:"+player.type,10,130);*/
+    if(monster.length)vcon.fillText("mon.chf:"+monster[0].chf,10,110);
+    vcon.fillText("bosslo:"+bosslocationlist,10,120);
+    vcon.fillText("talkphase:"+talkphaselist,10,130);*/
     //vcon.fillText("film.talk:"+film.talk,10,140);
     //プレイヤーのHPを表示する
     if( player.hp>0)
@@ -221,7 +225,7 @@ function draw()
     
     //仮想画面から実画面へ拡大転送
     con.drawImage(vcan,0,0,SCREEN_SIZE_W,SCREEN_SIZE_H,
-        0,0,SCREEN_SIZE_W*3,SCREEN_SIZE_H*3);
+        0,0,can.width,can.height);
 }
 
 
@@ -243,7 +247,7 @@ function mainloop()
     if(nowFrame>frameCount)
     {
         let c=0;
-        while(nowFrame>frameCount)
+        while(nowFrame>frameCount)//nowFrameの更新が遅れた時に更新処理回数を増やす
         {
             frameCount++;
             //更新処理
@@ -253,7 +257,7 @@ function mainloop()
         //描画処理
         draw();
     }
-    if( gameOver ||film.end/*&& keyb.RBUTTON*/){
+    if( gameOver ||film.end){//ゲームオーバー、エンディング時にgamehome関数を実行
         if((film.cou++>(60*44)&&gameOver)||(film.cou>(60*263)&&film.end)||keyb.RBUTTON){
             film.cou=0;
             //cancelAnimationFrame(animationId);
@@ -287,9 +291,10 @@ document.onkeydown =function(e)
 
     //ゲーム開始
     if( !gameStart && keyb.ABUTTON)film.gamestart();
-    if(keyb.SBUTTON&&(gameStart==false)){//データリセット
+    //データリセット
+    if(keyb.SBUTTON&&(gameStart==false)){
         storage.delete(); 
-        user_data={  //初期値の再設定
+        user_data={  //ストレージクラスの初期値の再設定
             player_x:5<<8,
             player_y:17<<8,
             player_hp:player.mhp,
@@ -300,6 +305,7 @@ document.onkeydown =function(e)
             item_collectionlist:[],
             action_talkphase:[0],
             action_locationlist:[],
+            monster_bosslocationlist:[],
         };
         storage.data=user_data;
         let list=itemlocationlist;
@@ -307,7 +313,7 @@ document.onkeydown =function(e)
             fieldData[list[i][1]*FIELD_SIZE_W+list[i][0]]=list[i][2];
         }
         list=actionlocationlist;
-        for(let i=0;i<list.length;i++){//消去したアイテムマスを復元させる
+        for(let i=0;i<list.length;i++){//消去したアクションマスを復元させる
             fieldData[list[i][1]*FIELD_SIZE_W+list[i][0]]=list[i][2];
         }
         con.font=" 30px 'DotGothic16'";
@@ -333,11 +339,9 @@ document.onkeyup =function(e)
 //当たり判定
 function checkHit(x1,y1,r1,  x2,y2,r2)
 {
-
     let a=(x2-x1)>>4;
     let b=(y2-y1)>>4;
     let r=r1+r2;
-
     return r*r>=a*a + b*b;
 }
 
