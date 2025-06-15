@@ -5,25 +5,25 @@
 class Action {
     constructor(bl,x,y)
     {
-        this.ox=x;
-        this.oy=y;
+        this.ox=x;//原点x
+        this.oy=y;//原点y
         this.bl=bl;
         this.x=x<<8;
         this.y=y<<8;
         this.flag=false;
-        this.drawflag=false;
+        this.drawflag=false;//trueでテキストなどを描画
         this.kill=false;
         this.remove=false;
-        if(this.bl==61||this.bl==62||this.bl==78)fieldData[y*FIELD_SIZE_W+x]=21;//透明な当たり判定
+        if(this.bl==61||this.bl==62||this.bl==78)fieldData[y*FIELD_SIZE_W+x]=21;//bl21は透明な当たり判定
         else fieldData[y*FIELD_SIZE_W+x]=-1;
         this.cou=0;
-        this.state=0;//１で破壊未セーブ、0でセーブの必要なし
+        this.state=0;//１で破壊したが未セーブ、0でセーブの必要なしまたはセーブ済み
     }
 
 
     update()
     {
-        if((gameOver||film.end)&&film.cou<2){
+        if((gameOver||film.end)&&film.cou<2){//ゲームオーバー、エンドでマスを元に戻す
             fieldData[this.oy*FIELD_SIZE_W+this.ox]=this.bl;
             if(this.bl==78)fieldData[(this.oy-1)*FIELD_SIZE_W+this.ox]=62;
         }
@@ -62,7 +62,7 @@ function actionFunc(obj){
     switch(obj.bl)
     {
         case 60: 
-        actionFunc00(obj); //ワプナ
+        actionFunc00(obj); //ワプナ(おじさん)
         break;
         case 49:
         actionFunc01(obj); //テント
@@ -125,6 +125,7 @@ function actionFunc00(obj){//ワプナ
     }
     else obj.drawflag=false;
 }
+
 function actionFunc01(obj){//テント
     let cx=obj.x+(16<<4)
     let cy=obj.y
@@ -133,13 +134,13 @@ function actionFunc01(obj){//テント
         obj.drawflag=true;
         inventory.cancelflag=10; //メニューを開かせない
         if(keyb.DBUTTON){
-            player.hp=player.mhp;
+            player.hp=player.mhp;//hp回復
             obj.cou=0;
             obj.flag=120;
 
             //データセーブ
-            for(let i=0;i<inventory.array.length;i++){
-                itemdatalist.push(inventory.array[i].bl)//
+            for(let i=0;i<inventory.array.length;i++){//所持アイテムの保存
+                itemdatalist.push(inventory.array[i].bl)
             }
             for(let i=0;i<item.length;i++){
                 if(item[i].state==1){//新規のアイテム位置を保存
@@ -148,9 +149,8 @@ function actionFunc01(obj){//テント
                 }
             }
 
-            //
             for(let i=0;i<action.length;i++){
-                if(action[i].state==1){//新規破壊済みアクションマス位置を保存
+                if(action[i].state==1){//新規の破壊済みアクションマス位置を保存
                     actionlocationlist.push([action[i].ox,action[i].oy,action[i].bl]);
                     if(action[i].bl==78)actionlocationlist.push([action[i].ox,(action[i].oy-1),62]);//扉上のマス
                     action[i].state=0;
@@ -171,6 +171,7 @@ function actionFunc01(obj){//テント
                 item_collectionlist:inventory.collectlist,
                 action_talkphase:talkphaselist,
                 action_locationlist:actionlocationlist,
+                monster_bosslocationlist:bosslocationlist,
             };
             storage.data=user_data;
             storage.save();
@@ -196,9 +197,18 @@ function actionFunc02(obj){//岩
         audio.seFunc(audio.enum);
         }
     }else obj.drawflag=false;
-    if(!playerattack.length)return;
+    if(!playerattack.length&&!monsterattack.length)return;
     for(let i=0;i<playerattack.length;i++){//ツチカヤクで破壊
         let at=playerattack[i];
+        if(at.type==8&&checkHit(cx,cy,13,at.x,at.y,at.r)){
+            fieldData[obj.oy*FIELD_SIZE_W+obj.ox]=-1;
+            obj.remove=true;
+            audio.enum=6;
+            audio.seFunc(audio.enum);
+        }
+    }
+    for(let i=0;i<monsterattack.length;i++){//モンスターの土カヤクでも破壊
+        let at=monsterattack[i];
         if(at.type==8&&checkHit(cx,cy,13,at.x,at.y,at.r)){
             fieldData[obj.oy*FIELD_SIZE_W+obj.ox]=-1;
             obj.remove=true;
@@ -214,14 +224,16 @@ function actionFunc03(obj){//扉
     if(checkHit(cx,cy,13,player.x,player.y,player.r))
     {
         obj.drawflag=true;
-        if(inventory.collect3){
+        if(inventory.collect3){//鍵があればマスを変える
         obj.state=1;
         fieldData[obj.oy*FIELD_SIZE_W+obj.ox]=-1;
         fieldData[(obj.oy-1)*FIELD_SIZE_W+obj.ox]=-1;
         obj.remove=true;
         audio.enum=6;
         audio.seFunc(audio.enum);
-        inventory.collect3--;
+        inventory.collect3--;//鍵を消費
         }
     }else obj.drawflag=false;
 }
+
+
