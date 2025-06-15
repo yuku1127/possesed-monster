@@ -1,7 +1,7 @@
 
 class Monster
 {
-    constructor(bl,x,y)
+    constructor(bl,x,y,generate)
     {
         this.ox=x;
         this.oy=y;
@@ -29,10 +29,12 @@ class Monster
         this.swimflag=false;
         this.tamaflag=0;
         this.chc=false;
+        this.chf=false;
         this.angle=0;
         this.reload=0;
         this.dirc=0;
         this.remove=false;  //描画をやめてクラスは残す
+        this.generate=generate;
         fieldData[y*FIELD_SIZE_W+x]=this.backbl;
     }
 
@@ -52,10 +54,11 @@ class Monster
                     if(this.vy>GRAVITY&&this.tnum==6)bossFunc1(this); //ゴーレム落石
                     this.jump=0;
                     this.vy=0;
-                    
+                    this.chf=true;
                     //足が食い込んだブロックの座標(左上)に身長を引く
                     this.y=((((ly+(this.h>>1))>>4)<<4)-(this.h>>1))<<4;
                 }
+                else this.chf=false;
 
             }
 
@@ -73,11 +76,6 @@ class Monster
         {
             this.vy=0;
             this.chc=true;
-            /*if(this.tnum==2){//コウモリ
-                this.angle=180
-                this.vx=0;
-                this.snum=40;
-            }*/
         }
          else this.chc=false;
     }
@@ -134,14 +132,20 @@ class Monster
     update()
     {
         if(this.kill){
-            if(this.tnum!==6||this.remove==false)fieldData[this.oy*FIELD_SIZE_W+this.ox]=this.bl;
+            if((this.tnum!==6||this.remove==false)&&!this.generate)fieldData[this.oy*FIELD_SIZE_W+this.ox]=this.bl;
             if(this.tnum==6){//ゴーレムbgmを消去
                 audio.bgmStop(4);
                 audio.bgmStart(floardata[field.floar].back);
                 audio.bnum=field.back;
             }
         }
-        if(this.remove)return;
+        if(this.remove){
+            if(this.tnum==6&&!this.swimflag){//ボス討伐時に座標保存(仮でswimflagを使用)
+                bosslocationlist.push([this.ox,this.oy,this.bl]);
+                this.swimflag=true;
+            }
+            return;
+        }
         if(this.kill)return;
         if(cancelflag)return;
 
@@ -476,19 +480,19 @@ function monsterMove06(obj){//ゴーレムの動き
         else if(obj.flag1>=240)obj.flag1=0;
 
     }
-    else if(obj.x>player.x){
+    else if(obj.x>player.x&&obj.chf){
         obj.flag1=0;
         obj.snum=110
         obj.dirc=1;
         if(!obj.reload)obj.reload=60<<2;
-        if(obj.reload==30)anime.push(new Anime(47,(obj.x>>8)+(16>>4),(obj.y>>8)+(16>>4)));
+        //if(obj.reload==30)anime.push(new Anime(47,(obj.x>>8)+(16>>4),(obj.y>>8)+(16>>4),true));
     }
-    else if(obj.x<player.x){
+    else if(obj.x<player.x&&obj.chf){
         obj.flag1=0;
         obj.snum=113
         obj.dirc=0;
         if(!obj.reload)obj.reload=60<<2;
-        if(obj.reload==30)anime.push(new Anime(47,(obj.x>>8)-(16>>4),(obj.y>>8)+(16>>4)));
+        //if(obj.reload==30)anime.push(new Anime(47,(obj.x>>8)-(16>>4),(obj.y>>8)+(16>>4),true));
     }
 
     //大ジャンプ
@@ -534,11 +538,11 @@ let monsterFunc=[
 function bossFunc1(obj){//落石
     monsterattack.push(new MonsterAttack(obj.x,obj.y+(16<<4),0,9));
     monsterattack.push(new MonsterAttack(obj.x,obj.y+(16<<4),1,9));
-    for(let i=0;i<8;i++){
-    let x=(rand((obj.x>>4)-150,(obj.x>>4)+150))>>4;
-    let y=(rand((obj.y>>4)-250,(obj.y>>4)-150))>>4;
-    if(i<1)anime.push(new Anime(46,x,y));
-    else anime.push(new Anime(45,x,y));
+    for(let i=0;i<12;i++){
+    let x=(rand((obj.x>>4)-120,(obj.x>>4)+120))>>4;
+    let y=(rand((obj.y>>4)-250,(obj.y>>4)-170))>>4;
+    if(i<1)anime.push(new Anime(46,x,y,true));
+    else anime.push(new Anime(45,x,y,true));
     obj.reload=(60<<2)-24;
 }
 }
