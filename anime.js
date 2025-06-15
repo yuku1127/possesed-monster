@@ -1,7 +1,7 @@
 //動きのある背景、煙、火の玉など
 
 class Anime{
-    constructor(bl,x,y)
+    constructor(bl,x,y,generate)
     {
         this.ox=x;
         this.oy=y;
@@ -17,17 +17,18 @@ class Anime{
         this.atk=5;
         this.snum=23;
         this.bl=bl;
-        this.kill=false;
-        this.remove=false;  //描画をやめてクラスは残す
+        this.kill=false;    //クラスを消すフラグ
+        this.remove=false;  //描画をやめてクラスは残すフラグ
         this.count=0;
         this.acou=0;
         this.reload=0;
+        this.generate=generate;//trueの時はblリスト以外で生成されたクラス
         fieldData[y*FIELD_SIZE_W+x]=this.backbl;
     }
 
     update(){
         if(this.kill){//アニメーションを消す直前にマスを元のblに戻す
-            fieldData[this.oy*FIELD_SIZE_W+this.ox]=this.bl;
+            if(!this.generate)fieldData[this.oy*FIELD_SIZE_W+this.ox]=this.bl;
             return;
         }
         if(cancelflag)return;
@@ -99,7 +100,7 @@ function animemoveFunc(obj){
         case 3://トゲネズミ
         if(field.isBlock(lx,ly+(sprite[obj.snum].h>>1))){
             obj.remove=true;
-            monster.push(new Monster(56,lx>>4,ly>>4));
+            monster.push(new Monster(56,lx>>4,ly>>4,true));
         }
         obj.snum=96;
         break;
@@ -130,7 +131,7 @@ function animemoveFunc(obj){
 
         case 7://ボス戦遮断ブロック
         if(monster.length){
-        if(monster[0].remove==false){
+        if(monster[0].remove==false){//ボスのいるマップでは最初のモンスタークラスが必ずゴーレムになる
             fieldData[obj.oy*FIELD_SIZE_W+obj.ox]=21;
             obj.snum=130;
         }
