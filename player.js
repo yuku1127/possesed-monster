@@ -636,8 +636,8 @@ class Player
         obj.angle=0;
        vcon.restore();
 
-       vcon.fillStyle="white";
-       vcon.fillRect(px,py,2,2);
+       //vcon.fillStyle="white";
+       //vcon.fillRect(px,py,2,2);
     }
 
     //
