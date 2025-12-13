@@ -176,10 +176,6 @@ function draw()
     con.clearRect(0,0,SCREEN_SIZE_W*3,SCREEN_SIZE_H*3);
     con.beginPath();
 
-    //画面をkuro色でクリア
-    //vcon.fillStyle="black";
-    //vcon.fillRect(0,0,SCREEN_SIZE_W,SCREEN_SIZE_H);
-
     //マップを表示
     background.draw();
     drawObj(anime);
@@ -200,17 +196,7 @@ function draw()
     vcon.fillStyle="#FFF";
     //vcon.fillText("FRAME:"+frameCount,10,20);
     vcon.fillText("HP:"+player.hp,5,20);
-    //vcon.fillText("x:"+(player.x>>8),10,40);
-    //vcon.fillText("y:"+(player.y>>8),10,50);
-    /*vcon.fillText("cancelflag:"+cancelflag,10,60);
-    vcon.fillText("actionlocationlist:"+actionlocationlist,10,70);
-    vcon.fillText("st.item:"+storage.data.item_locationlist,10,80);
-    vcon.fillText("st.boss:"+storage.data.monster_bosslocationlist,10,90);
-    if(item.length)vcon.fillText("item.length:"+item.length,10,100);
-    if(monster.length)vcon.fillText("mon.chf:"+monster[0].chf,10,110);
-    vcon.fillText("bosslo:"+bosslocationlist,10,120);
-    vcon.fillText("talkphase:"+talkphaselist,10,130);*/
-    //vcon.fillText("film.talk:"+film.talk,10,140);
+
     //プレイヤーのHPを表示する
     if( player.hp>0)
     {
@@ -260,17 +246,14 @@ function mainloop()
     if( gameOver ||film.end){//ゲームオーバー、エンディング時にgamehome関数を実行
         if((film.cou++>(60*44)&&gameOver)||(film.cou>(60*263)&&film.end)||keyb.RBUTTON){
             film.cou=0;
-            //cancelAnimationFrame(animationId);
-            //animationId=undefined;
             audio.bgmStop(audio.bnum);
             film.gamehome();
             gameStart=false;
             gameOver=false;
             film.end=false;
         }
-        //else animationId=requestAnimationFrame(mainloop);
     }
-     /*animationId=*/requestAnimationFrame(mainloop);
+    requestAnimationFrame(mainloop);
 }
 
 document.fonts.ready.then(function(){ //ホーム画面表示
